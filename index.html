@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071e37">
+  <title>מעבדת הפקעית | סימולטור סינון גלומרולרי</title>
+  <style>
+    :root {
+      --navy:#071e37; --ink:#132c45; --muted:#60778d; --line:#d8e4ec;
+      --paper:#f2f7fb; --white:#ffffff; --teal:#0087b8; --blue:#0b98d1;
+      --red:#e64f68; --purple:#7955c2; --amber:#de9a25; --green:#188769;
+    }
+    * {box-sizing:border-box}
+    html {scroll-behavior:smooth}
+    body {margin:0; min-height:100vh; background:var(--paper); color:var(--ink); font-family:Arial,"Segoe UI",sans-serif; line-height:1.45}
+    button,input {font:inherit}
+    button {cursor:pointer}
+    .masthead {background:linear-gradient(110deg,#071d36 0%,#103c57 62%,#096183 100%);color:white;padding:18px clamp(16px,3.2vw,50px) 16px}
+    .head-inner {max-width:1670px;margin:auto;display:flex;align-items:center;gap:17px}
+    .brand-icon {width:62px;height:62px;flex:0 0 62px;border-radius:18px;display:grid;place-items:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18)}
+    .brand-icon svg {width:42px;height:42px}
+    .kicker {color:#8ee9ff;font-weight:800;font-size:.83rem;letter-spacing:.1px;margin:0 0 3px}
+    .author-credit {color:#d5f0fa;font-size:.73rem;font-weight:600;border-inline-start:1px solid #8eb7ca;padding-inline-start:9px;margin-inline-start:9px}
+    h1 {font-size:clamp(1.6rem,2.45vw,2.5rem);line-height:1.12;margin:0 0 5px;font-weight:900}
+    .subheading {margin:0;color:#d4e6f2;font-size:.99rem}
+    .head-side {margin-inline-start:auto;text-align:left;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .pill {display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#eefcff;font-weight:700;font-size:.8rem}
+    .pill .dot {width:8px;height:8px;background:#6bf1c8;border-radius:50%;box-shadow:0 0 0 4px rgba(107,241,200,.14)}
+    .page {max-width:1710px;margin:0 auto;padding:16px clamp(12px,2.4vw,36px) 35px}
+    .modebar {display:flex;align-items:center;gap:9px;margin-bottom:14px;flex-wrap:wrap}
+    .mode-tabs {display:flex;gap:6px;background:#e3edf5;border-radius:13px;padding:5px}
+    .mode-tab {border:0;background:transparent;border-radius:10px;color:#40617b;font-weight:800;padding:10px 18px;transition:.2s}
+    .mode-tab[aria-selected="true"] {background:#fff;color:#0c5478;box-shadow:0 2px 8px #103b5318}
+    .mode-explainer {font-size:.87rem;color:var(--muted);font-weight:600;margin-inline-start:10px}
+    .app-grid {display:grid;grid-template-columns:minmax(320px,1fr) 352px;gap:15px;align-items:start}
+    .card {background:white;border:1px solid var(--line);box-shadow:0 7px 23px rgba(15,55,88,.055);border-radius:18px;overflow:hidden}
+    .card-heading {display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 19px 12px}
+    .card-heading h2 {font-size:1.14rem;margin:0;font-weight:900}
+    .caption {color:var(--muted);font-size:.81rem}
+    .stage {position:relative;background:radial-gradient(circle at 50% 38%,#ffffff 20%,#eaf7ff 73%,#e8f0f9 100%);border-block:1px solid #e1eaf0;overflow:hidden}
+    .stage svg {width:100%;display:block;aspect-ratio:1000/565;max-height:570px;min-height:310px}
+    .stage-badge {position:absolute;top:13px;right:14px;z-index:2;background:#fffef6;color:#986215;border:1px solid #f1d898;border-radius:999px;padding:5px 9px;font-size:.75rem;font-weight:800;box-shadow:0 4px 14px #1c477019}
+    .stage-note {position:static;margin:0 13px 13px;background:rgba(255,255,255,.95);border:1px solid #d7e8f2;border-radius:12px;padding:9px 13px;display:flex;gap:9px;align-items:start;box-shadow:0 4px 14px #15334912}
+    .stage-note strong {color:#0877a6;white-space:nowrap}
+    .stage-note span {font-size:.89rem;color:#38566e}
+    .stage-footer {display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 17px;background:#fff;flex-wrap:wrap}
+    .legend {display:flex;gap:13px;align-items:center;flex-wrap:wrap;font-size:.82rem;font-weight:700;color:#557087}
+    .legend-item {display:flex;gap:5px;align-items:center}
+    .legend-dot {width:10px;height:10px;border-radius:99px}
+    .stage-actions {display:flex;gap:7px}
+    .small-btn {background:#edf4f8;color:#244d6b;border:1px solid #d7e5ee;border-radius:10px;padding:8px 11px;font-size:.82rem;font-weight:800}
+    .small-btn:hover {background:#dfeef8}
+    .small-btn:focus-visible,.mode-tab:focus-visible,.action-btn:focus-visible,.preset:focus-visible {outline:3px solid #7bd1f1;outline-offset:2px}
+    .controls {padding-bottom:7px}
+    .controls-header {border-bottom:1px solid #e4edf3;margin-bottom:12px}
+    .control-box {padding:0 19px 15px}
+    .control-box + .control-box {border-top:1px dashed #e3edf3;padding-top:15px}
+    .control-row {display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;gap:10px}
+    .control-row label {font-weight:850;font-size:.9rem}
+    .value {direction:ltr;unicode-bidi:isolate;font-size:.88rem;font-weight:900;font-variant-numeric:tabular-nums;background:#eef6fb;padding:4px 8px;border-radius:8px;color:#155b7d;min-width:76px;text-align:center}
+    .control-help {color:#7890a1;font-size:.78rem;margin:7px 0 0}
+    input[type=range] {appearance:none;-webkit-appearance:none;width:100%;height:9px;border-radius:99px;background:linear-gradient(to left,var(--active,#108bbb) var(--fill,50%),#dfecf3 var(--fill,50%));outline:0;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb {appearance:none;width:23px;height:23px;border-radius:50%;background:white;border:5px solid var(--active,#108bbb);box-shadow:0 2px 7px #143c5430}
+    input[type=range]::-moz-range-thumb {width:14px;height:14px;border-radius:50%;background:white;border:5px solid var(--active,#108bbb);box-shadow:0 2px 7px #143c5430}
+    .hints {display:flex;justify-content:space-between;font-size:.73rem;color:#8198aa;margin-top:8px}
+    .control-section-label {color:#6b8397;font-size:.8rem;font-weight:900;letter-spacing:.1px;margin:0 19px 13px}
+    .control-secondary {display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 19px 13px}
+    .control-secondary button {background:#fff;border:1px solid #bfd6e5;border-radius:11px;color:#1c658d;padding:9px 8px;font-weight:800}
+    .control-secondary button:hover {background:#eef8ff}
+    .preset-title {font-weight:900;font-size:.85rem;margin:2px 19px 9px;color:#47677b}
+    .preset-grid {display:flex;gap:7px;flex-wrap:wrap;padding:0 19px 13px}
+    .preset {border:1px solid #d3e3ed;background:#f7fafc;color:#45667c;border-radius:10px;padding:7px 10px;font-size:.8rem;font-weight:800}
+    .preset:hover {background:#e5f5fc;border-color:#b0d5e5}
+    .readout {padding:15px 18px}
+    .readout-grid {display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+    .measure {background:#f0f7fb;border:1px solid #dceaf2;border-radius:13px;padding:12px 8px;min-width:0;text-align:center}
+    .measure .name {color:#597588;font-size:.78rem;font-weight:800;display:block;margin-bottom:2px}
+    .measure .number {color:#0a6f9e;font-size:clamp(1.4rem,2.1vw,2.18rem);font-weight:900;line-height:1.2;font-variant-numeric:tabular-nums;display:block;direction:ltr}
+    .measure small {font-size:.68rem;color:#7892a5}
+    .delta {font-weight:900;font-size:.75rem;display:block;margin-top:4px}
+    .delta.up {color:#158468}.delta.down {color:#c95a45}.delta.neutral {color:#688398}
+    .forces {padding:15px 19px}
+    .forces h2 {margin:0 0 3px;font-size:1.04rem}
+    .force-line {margin-top:14px}
+    .force-top {display:flex;justify-content:space-between;gap:8px;font-size:.82rem;font-weight:850;margin-bottom:6px}
+    .force-top output {direction:ltr;font-variant-numeric:tabular-nums}
+    .force-track {height:12px;background:#eef3f7;border-radius:99px;overflow:hidden}
+    .force-fill {height:100%;border-radius:99px;transition:width .32s ease}
+    .bar-pgc {background:linear-gradient(90deg,#32a87e,#0fbdad)}
+    .bar-pi {background:linear-gradient(90deg,#8f68d4,#6246b6)}
+    .bar-bow {background:linear-gradient(90deg,#f3c974,#e2a43a)}
+    .equation {background:#0e3554;color:white;padding:12px 13px;margin-top:16px;border-radius:12px;text-align:center}
+    .equation .equation-label {font-size:.76rem;color:#b4d6e9;font-weight:700}
+    .equation strong {display:block;font-size:1.54rem;direction:ltr;font-variant-numeric:tabular-nums}
+    .equation span {font-size:.72rem;color:#c6ddec}
+    .side-warning {background:#fff5e7;border:1px solid #f2d6a8;color:#775218;border-radius:10px;padding:9px 11px;font-size:.78rem;font-weight:700;margin-top:11px;display:none}
+    .side-warning.show {display:block}
+    .net-interpretation {display:block;margin-top:4px;color:#a6f1d4!important;font-size:.78rem!important;font-weight:900;text-align:center}
+    .net-interpretation.negative {color:#ffce99!important}
+    .details-row {display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:15px;margin-top:15px}
+    .insight {padding:16px 19px}
+    .insight .mini-kicker {font-size:.75rem;color:#078fb6;font-weight:900;margin-bottom:5px}
+    .insight h3 {font-size:1.05rem;margin:0 0 7px}
+    .insight p {margin:0;color:#4f697d;font-size:.91rem}
+    .comparison {padding:16px 20px}
+    .comparison h3 {font-size:1.02rem;margin:0 0 13px}
+    .cmp-row {display:grid;grid-template-columns:108px 1fr 64px;gap:10px;align-items:center;margin:10px 0}
+    .cmp-row label {font-weight:800;color:#607b8e;font-size:.81rem}
+    .cmp-track {height:13px;background:#e7eef4;position:relative;overflow:hidden;border-radius:99px}
+    .cmp-normal {position:absolute;right:0;top:0;bottom:0;background:#a8bbc9;opacity:.65}
+    .cmp-live {position:absolute;right:0;top:0;bottom:0;background:linear-gradient(90deg,#10a2da,#076b9a);border-radius:99px;transition:width .32s ease}
+    .cmp-row output {text-align:left;direction:ltr;font-size:.81rem;font-weight:900;color:#285b7e;font-variant-numeric:tabular-nums}
+    .guided-panel,.challenge-panel {padding:16px 19px;border-top:1px solid #dce9f2;background:linear-gradient(140deg,#f7fcff,#f0f7fb)}
+    .panel-heading {display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .panel-heading h3 {margin:0;font-size:1.12rem}
+    .step-count {background:#e1f4fc;color:#1175a0;border:1px solid #c8e8f5;padding:5px 10px;font-size:.75rem;font-weight:900;border-radius:999px}
+    .task-question {font-size:.98rem;font-weight:850;margin:8px 0 11px}
+    .choice-list {display:flex;flex-wrap:wrap;gap:8px}
+    .choice {border:2px solid #cddfea;background:white;border-radius:10px;padding:9px 14px;font-weight:850;color:#335971}
+    .choice.chosen {border-color:#0b8abd;background:#e1f5ff}
+    .choice.correct {border-color:#139472;background:#e7faf3;color:#116b54}
+    .choice.wrong {border-color:#df6a63;background:#fff0ef;color:#aa473e}
+    .guide-actions {display:flex;gap:9px;align-items:center;margin-top:13px;flex-wrap:wrap}
+    .action-btn {background:#087daf;color:white;border:0;border-radius:11px;font-weight:900;padding:10px 17px;box-shadow:0 4px 11px #096b9826}
+    .action-btn:hover {background:#086d99}
+    .action-btn:disabled {opacity:.42;cursor:not-allowed;box-shadow:none}
+    .action-btn.secondary {background:white;border:1px solid #c6dfea;color:#236486;box-shadow:none}
+    .feedback {margin-top:12px;padding:10px 13px;background:#e5f8f1;color:#1a6956;border:1px solid #bde8d8;border-radius:11px;font-size:.9rem;font-weight:700;display:none}
+    .feedback.show {display:block}
+    .feedback.error {background:#fff4e9;color:#82541e;border-color:#f1d1a0}
+    .challenge-list {display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .challenge-item {border:1px solid #cbddea;background:white;border-radius:10px;padding:8px 12px;font-weight:800;color:#37627e}
+    .challenge-item.selected {background:#0d7dae;border-color:#0d7dae;color:white}
+    .challenge-code {background:#dff3fb;color:#176a8c;border-radius:6px;padding:4px 7px;margin-inline-start:6px;font-size:.77rem}
+    .challenge-item.selected .challenge-code {background:#2d97c1;color:white}
+    .science-foot {font-size:.78rem;color:#71899a;padding:17px 6px 0;max-width:1100px;margin:auto;text-align:center}
+    [hidden] {display:none!important}
+    .signal {display:inline-block;width:9px;height:9px;border-radius:50%;background:#15b58c;box-shadow:0 0 0 4px #bff0e4;margin-inline-end:6px}
+    .svg-label {font-family:Arial,sans-serif;paint-order:stroke fill;stroke:#fff;stroke-width:4px;stroke-linejoin:round;fill:#1d4b67;font-weight:900}
+    .svg-caption {font-size:17px}
+    .svg-small {font-size:14px}
+    .svg-vessel-title {font-size:19px;font-weight:900}
+    @media (max-width:1200px) {.app-grid {grid-template-columns:minmax(0,1fr) 315px}.details-row {grid-template-columns:1fr}}
+    @media (max-width:860px) {.app-grid {grid-template-columns:1fr}.controls {display:grid;grid-template-columns:1fr 1fr}.controls-header {grid-column:1 / -1}.control-box {border:0!important}.control-section-label,.control-secondary,.preset-title,.preset-grid {grid-column:1/-1}.readout-grid {gap:6px}.stage svg {min-height:0}.head-side {display:none}}
+    @media (max-width:580px) {.masthead {padding:15px}.brand-icon {width:48px;height:48px;flex-basis:48px}.brand-icon svg {width:33px;height:33px}.subheading {font-size:.79rem}h1{font-size:1.45rem}.modebar{gap:5px}.mode-tabs{width:100%;justify-content:space-around}.mode-tab{font-size:.79rem;padding:10px 8px;flex:1}.mode-explainer{font-size:.76rem}.card-heading{padding:13px 14px}.controls{grid-template-columns:1fr}.control-box{padding:3px 16px 14px}.control-box+.control-box{padding-top:12px}.readout{padding:13px}.measure{padding:10px 4px}.measure .name{font-size:.68rem}.measure .number{font-size:1.4rem}.stage-note{margin:0 10px 10px}.stage svg{aspect-ratio:1000/615}.stage-badge{font-size:.65rem;top:7px;right:8px}.stage-footer{padding:10px 12px}.legend{gap:8px;font-size:.72rem}.cmp-row{grid-template-columns:88px 1fr 50px}.details-row{gap:10px;margin-top:10px}.page{padding:10px 8px 25px}}
+    @media(prefers-reduced-motion:reduce) {.force-fill,.cmp-live{transition:none}}
+    /* Desktop cockpit: all essential controls, physiology and results in one view. */
+    .masthead {padding:9px clamp(15px,2.1vw,38px)}
+    .brand-icon {width:50px;height:50px;flex-basis:50px;border-radius:14px}
+    .brand-icon svg {width:35px;height:35px}
+    .kicker {font-size:.71rem;margin-bottom:1px}
+    h1 {font-size:clamp(1.5rem,2vw,2rem);margin-bottom:2px}
+    .subheading {font-size:.85rem}
+    .page {padding-top:9px;padding-bottom:17px}
+    .modebar {margin-bottom:9px}
+    .mode-tab {padding:7px 14px}
+    .card-heading {padding:11px 14px 9px}
+    .stage svg {height:min(47vh,420px);max-height:none;min-height:0;aspect-ratio:auto}
+    .stage-note {margin:0 10px 9px;padding:7px 10px}
+    .stage-note span {font-size:.82rem}
+    .stage-footer {padding:8px 12px}
+    .guided-panel,.challenge-panel {padding:10px 14px}
+    .panel-heading {margin-bottom:5px}
+    .panel-heading h3 {font-size:1rem}
+    .task-question {margin:5px 0 8px;font-size:.91rem}
+    .choice {padding:6px 10px;font-size:.84rem}
+    .guide-actions {margin-top:8px}
+    .guide-actions .action-btn {padding:7px 12px;font-size:.83rem}
+    .feedback {margin-top:7px;padding:7px 10px;font-size:.82rem}
+    .readout {padding:10px 12px}
+    .readout .card-heading {padding:0 0 7px!important}
+    .readout-grid {gap:5px}
+    .measure {padding:8px 4px}
+    .measure .name {font-size:.7rem}
+    .measure .number {font-size:clamp(1.2rem,1.6vw,1.6rem)}
+    .delta {font-size:.67rem;margin-top:2px}
+    .forces {padding:12px}
+    .force-line {margin-top:9px}
+    .force-track {height:10px}
+    .force-top {font-size:.75rem}
+    .equation {padding:9px 7px;margin-top:10px}
+    .equation strong {font-size:1.25rem}
+    .net-interpretation {font-size:.75rem;padding:7px 8px}
+    .insight,.comparison {padding:11px 13px}
+    .insight h3,.comparison h3 {font-size:.93rem;margin-bottom:5px}
+    .insight p {font-size:.8rem}
+    .cmp-row {grid-template-columns:75px 1fr 47px;gap:5px;margin:5px 0}
+    .cmp-row label,.cmp-row output {font-size:.73rem}
+    .controls-header {margin-bottom:8px}
+    .control-box {padding:0 14px 10px}
+    .control-box + .control-box {padding-top:10px}
+    .control-row label {font-size:.82rem}
+    .control-help {font-size:.7rem;margin-top:4px}
+    .hints {margin-top:5px}
+    .control-section-label {margin:0 14px 8px}
+    .control-secondary {margin:0 14px 8px;gap:6px}
+    .control-secondary button {padding:7px 5px;font-size:.79rem}
+    .preset-title {margin:1px 14px 6px}
+    .preset-grid {padding:0 14px 10px;gap:5px}
+    .preset {padding:6px 7px;font-size:.74rem}
+    .science-foot {padding-top:8px;font-size:.69rem}
+    @media(min-width:1280px) {
+      .app-grid {display:grid;grid-template-columns:minmax(250px,310px) minmax(480px,1fr) minmax(260px,320px);column-gap:12px;row-gap:10px;align-items:start}
+      .main-column,.side-column {display:contents}
+      .main-column > .card {grid-column:2;grid-row:1/4;align-self:start}
+      .side-column > .controls {grid-column:3;grid-row:1/4;align-self:start}
+      .side-column > .readout {grid-column:1;grid-row:1;margin-top:0!important}
+      .side-column > .forces {grid-column:1;grid-row:2;margin-top:0!important}
+      .details-row {grid-column:1;grid-row:3;margin-top:0;display:grid;grid-template-columns:1fr;gap:9px}
+    }
+    @media(min-width:840px) and (max-width:1279px) {
+      .app-grid {display:grid;grid-template-columns:minmax(0,1fr) minmax(265px,310px);gap:11px;align-items:start}
+      .main-column,.side-column {display:contents}
+      .controls {display:block}
+      .main-column > .card {grid-column:1;grid-row:1/3;align-self:start}
+      .side-column > .controls {grid-column:2;grid-row:1;align-self:start}
+      .side-column > .readout {grid-column:2;grid-row:2;margin-top:0!important}
+      .side-column > .forces {grid-column:2;grid-row:3;margin-top:0!important}
+      .details-row {grid-column:1;grid-row:3;margin-top:0;grid-template-columns:1fr}
+    }
+    @media(max-width:839px) {
+      .app-grid {display:flex;flex-direction:column;gap:10px}
+      .main-column,.side-column {display:contents}
+      .main-column > .card {order:1;width:100%}
+      .side-column > .readout {order:2;width:100%;margin-top:0!important;position:sticky;top:0;z-index:12;box-shadow:0 5px 22px #082e4540}
+      .side-column > .controls {order:3;width:100%}
+      .side-column > .forces {order:4;width:100%;margin-top:0!important}
+      .details-row {order:5;width:100%;margin-top:0;grid-template-columns:1fr}
+      .readout .card-heading {display:none}
+      .readout {padding:7px}
+      .readout-grid {grid-template-columns:repeat(3,minmax(0,1fr))}
+      .measure {padding:5px 3px}
+      .measure .name {font-size:.67rem}
+      .measure .number {font-size:1.35rem}
+      .measure .delta {display:none}
+      .measure small {font-size:.59rem}
+      .stage svg {height:auto;aspect-ratio:1000/494;width:100%}
+      .stage.zoomed {overflow-x:auto}
+      .stage.zoomed svg {min-width:680px;height:336px;max-height:none}
+      .controls {display:block}
+      .control-box {border-top:1px dashed #e3edf3!important;padding:9px 16px 13px}
+      .control-secondary {grid-template-columns:1fr 1fr}
+      .science-foot {font-size:.72rem}
+    }
+    @media(min-width:840px) {#zoomButton {display:none}}
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="head-inner">
+      <div class="brand-icon" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none"><path d="M29 6C12 8 9 26 13 43c4 16 19 16 28 7 10-10 7-20 0-24-7-5-6-13-12-20Z" fill="#f67683" stroke="#fff" stroke-width="2.8"/><path d="M27 19C31 19 33 22 34 28" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/><path d="M48 13l10-4M49 23h12M49 33l10 7" stroke="#8ee9ff" stroke-width="3" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <p class="kicker">מדעי הבריאות | מעבדה פיזיולוגית 01 <span class="author-credit">פותח על ידי אורי העליון</span></p>
+        <h1>הפקעית תחת לחץ</h1>
+        <p class="subheading">מה קובע כמה נוזל יסתנן מהדם? שנו תנאים, צפו בזרימה, חקרו את התוצאה.</p>
+      </div>
+      <div class="head-side">
+        <span class="pill"><span class="dot"></span> סימולציה פעילה</span>
+        <span class="pill">ללא הרשמה או שרת</span>
+      </div>
+    </div>
+  </header>
+  <div class="page">
+    <div class="modebar">
+      <nav class="mode-tabs" aria-label="מצבי סימולציה">
+        <button class="mode-tab" data-mode="guided" aria-selected="true">לומדים בהדרגה</button>
+        <button class="mode-tab" data-mode="lab" aria-selected="false">מעבדה חופשית</button>
+        <button class="mode-tab" data-mode="challenge" aria-selected="false">אתגר כיתה</button>
+      </nav>
+      <span class="mode-explainer" id="modeExplainer">מנבאים את התוצאה ורק אחר כך מבצעים ניסוי.</span>
+    </div>
+    <main class="app-grid">
+      <div class="main-column">
+        <section class="card" aria-label="הדמיית הפקעית">
+          <div class="card-heading">
+            <h2>בתוך הגופיף הכלייתי</h2>
+            <span class="caption">אדום: הדם נשאר בכלי הדם | כחול: תסנין עובר לקופסית</span>
+          </div>
+          <div class="stage">
+            <div class="stage-badge">הדמיה סכמטית לימודית</div>
+            <svg id="nephronStage" viewBox="0 46 1000 494" role="img" aria-label="פקעית הכליה בתוך קופסית באומן, עם עורקיק נכנס, עורקיק יוצא וזרימת תסנין לצינורית">
+              <defs>
+                <linearGradient id="vesselGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f47a8a"/><stop offset="55%" stop-color="#d83b59"/><stop offset="100%" stop-color="#ab2444"/></linearGradient>
+                <linearGradient id="capsuleGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f7fdff"/><stop offset="100%" stop-color="#d6f1fa"/></linearGradient>
+                <linearGradient id="tubuleGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#bde6f7"/><stop offset="50%" stop-color="#eafaff"/><stop offset="100%" stop-color="#9fd7ec"/></linearGradient>
+                <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0L7 3L0 6" fill="none" stroke="#c63d58" stroke-width="1.6"/></marker>
+                <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0L7 3L0 6" fill="none" stroke="#0787c7" stroke-width="1.6"/></marker>
+                <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+              </defs>
+              <g opacity=".42" stroke="#cee7f4" stroke-width="1.5" stroke-dasharray="5 12">
+                <path d="M70 120H930M70 400H930M230 80V460M770 80V460"/>
+              </g>
+              <text x="500" y="52" text-anchor="middle" font-size="20" font-weight="900" fill="#1e5778">מערכת הסינון הגלומרולרי</text>
+              <path d="M452 378L452 507Q452 535 479 535H527Q553 535 553 507V379" fill="url(#tubuleGrad)" stroke="#278db4" stroke-width="10"/>
+              <path id="filtrateStream" d="M502 408L502 533" fill="none" stroke="#0b9bd7" stroke-width="16" stroke-linecap="round" opacity=".7"/>
+              <path d="M305 141C267 163 248 212 252 280C256 359 320 426 404 430C495 435 620 435 674 383C726 334 733 248 697 178C686 157 674 149 657 141" fill="url(#capsuleGrad)" stroke="#51a3c6" stroke-width="15" stroke-linejoin="round"/>
+              <path d="M323 185C292 220 300 307 340 344C387 389 608 392 652 345C697 299 690 219 660 181" fill="none" stroke="#a4dce9" stroke-width="5" stroke-dasharray="4 10" opacity=".85"/>
+              <ellipse cx="497" cy="274" rx="177" ry="111" fill="#fff4eb" stroke="#f3c3b9" stroke-width="6" opacity=".92"/>
+              <path d="M83 245L297 245" stroke="#8b2442" stroke-width="51" stroke-linecap="round" id="afferentOuter"/>
+              <path d="M83 245L297 245" stroke="url(#vesselGrad)" stroke-width="43" stroke-linecap="round" id="afferentInner"/>
+              <path d="M701 245L922 245" stroke="#8b2442" stroke-width="51" stroke-linecap="round" id="efferentOuter"/>
+              <path d="M701 245L922 245" stroke="url(#vesselGrad)" stroke-width="43" stroke-linecap="round" id="efferentInner"/>
+              <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M295 245C314 203 325 177 375 175C427 173 446 216 413 239C380 264 348 232 374 211C404 185 476 190 489 223C510 269 439 292 427 266C418 240 468 218 513 244C541 260 526 315 562 324C605 336 640 289 624 247C613 215 578 211 584 244C590 278 638 272 701 245" stroke="#992941" stroke-width="31" id="bloodBorder"/>
+                <path d="M295 245C314 203 325 177 375 175C427 173 446 216 413 239C380 264 348 232 374 211C404 185 476 190 489 223C510 269 439 292 427 266C418 240 468 218 513 244C541 260 526 315 562 324C605 336 640 289 624 247C613 215 578 211 584 244C590 278 638 272 701 245" stroke="url(#vesselGrad)" stroke-width="23" id="bloodCapillary"/>
+                <path d="M358 180C346 153 391 143 428 168M450 204C469 154 537 150 556 198M529 268C558 279 596 256 608 220M393 277C354 300 389 351 445 330M560 327C608 358 639 323 653 278" stroke="#d96777" stroke-width="12" opacity=".9"/>
+                <path d="M358 180C346 153 391 143 428 168M450 204C469 154 537 150 556 198M529 268C558 279 596 256 608 220M393 277C354 300 389 351 445 330M560 327C608 358 639 323 653 278" stroke="#f8a3ad" stroke-width="5" opacity=".75"/>
+              </g>
+              <path id="rbcMotionPath" d="M83 245L295 245C314 203 325 177 375 175C427 173 446 216 413 239C380 264 348 232 374 211C404 185 476 190 489 223C510 269 439 292 427 266C418 240 468 218 513 244C541 260 526 315 562 324C605 336 640 289 624 247C613 215 578 211 584 244C590 278 638 272 701 245L922 245" fill="none" stroke="none"/>
+              <path id="blueMotionPath" d="M434 288C432 320 408 342 423 376C437 399 480 402 502 412L502 530" fill="none" stroke="none"/>
+              <path d="M448 305Q429 342 455 361" fill="none" stroke="#18a3d4" stroke-width="3" stroke-dasharray="5 8" marker-end="url(#arrowBlue)" opacity=".8"/>
+              <path d="M566 317Q579 350 549 365" fill="none" stroke="#18a3d4" stroke-width="3" stroke-dasharray="5 8" marker-end="url(#arrowBlue)" opacity=".8"/>
+              <g id="bloodCells"></g>
+              <g id="proteinParticles"></g>
+              <g id="waterParticles"></g>
+              <path d="M136 161L136 215" stroke="#ca3c55" stroke-width="3" marker-end="url(#arrowRed)" />
+              <path d="M850 216L850 161" stroke="#ca3c55" stroke-width="3" marker-end="url(#arrowRed)" />
+              <text x="136" y="136" text-anchor="middle" class="svg-label svg-vessel-title">עורקיק נכנס</text>
+              <text x="850" y="136" text-anchor="middle" class="svg-label svg-vessel-title">עורקיק יוצא</text>
+              <text x="489" y="139" text-anchor="middle" class="svg-label svg-caption">נימי הפקעית</text>
+              <path d="M281 349L209 387" stroke="#2683ab" stroke-width="2" />
+              <text x="210" y="409" text-anchor="middle" class="svg-label svg-small">חלל קופסית</text>
+              <text x="210" y="429" text-anchor="middle" class="svg-label svg-small">באומן</text>
+              <path d="M555 475L625 492" stroke="#1685b8" stroke-width="2" />
+              <text x="691" y="505" text-anchor="middle" class="svg-label svg-caption" fill="#0b83b5">תסנין ראשוני</text>
+              <g transform="translate(34 472)">
+                <rect width="244" height="49" rx="12" fill="#fff" stroke="#d8e6ed"/>
+                <circle cx="214" cy="24" r="8" fill="#d4475d"/>
+                <text x="195" y="28" font-size="13.5" font-weight="800" fill="#3d6277" text-anchor="end">תאי דם וחלבונים נשארים</text>
+              </g>
+            </svg>
+            <div class="stage-note" aria-live="polite">
+              <strong id="sceneTitle">מצב תקין</strong>
+              <span id="sceneDescription">הדם זורם בנימי הפקעית. חלק מנוזל הפלזמה מסתנן אל קופסית באומן, ותאי הדם ורוב החלבונים נשארים בכלי הדם.</span>
+            </div>
+          </div>
+          <div class="stage-footer">
+            <div class="legend">
+              <span class="legend-item"><span class="legend-dot" style="background:#d4475d"></span>דם בנימים</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#169bcb"></span>תסנין</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#8059bd"></span>לחץ אונקוטי</span>
+            </div>
+            <div class="stage-actions">
+              <button id="zoomButton" class="small-btn" type="button" aria-pressed="false">⊕ הגדל איור</button>
+              <button id="pauseButton" class="small-btn" type="button" aria-pressed="false">❚❚ עצור תנועה</button>
+              <button id="speedButton" class="small-btn" type="button" title="שינוי מהירות האנימציה">מהירות ×1</button>
+            </div>
+          </div>
+          <section id="guidedPanel" class="guided-panel">
+            <div class="panel-heading">
+              <h3 id="guideTitle">שלב 1: כך נראה סינון תקין</h3>
+              <span class="step-count" id="guideCounter">1 מתוך 6</span>
+            </div>
+            <p id="guideDescription" class="caption" style="font-size:.91rem;margin:0"></p>
+            <p id="guideQuestion" class="task-question"></p>
+            <div id="guideChoices" class="choice-list"></div>
+            <div class="guide-actions">
+              <button id="guideRun" class="action-btn" type="button">הפעל את הניסוי</button>
+              <button id="guidePrev" class="action-btn secondary" type="button">הקודם</button>
+              <button id="guideNext" class="action-btn secondary" type="button">השלב הבא ←</button>
+            </div>
+            <div id="guideFeedback" class="feedback" role="status"></div>
+          </section>
+          <section id="challengePanel" class="challenge-panel" hidden>
+            <div class="panel-heading">
+              <h3>אתגר כיתה: קבלו מקרה, כוונו את הפקעית</h3>
+              <span class="step-count">עבודה אישית או בזוגות</span>
+            </div>
+            <p class="caption" style="font-size:.9rem;margin:0">המורה יכול להציג קוד משימה על הלוח. התלמידים בוחרים את אותו קוד בטלפון ומנסים להשיג את היעד.</p>
+            <div class="challenge-list" id="challengeList"></div>
+            <p id="challengeStory" class="task-question"></p>
+            <p id="challengeGoal" class="caption" style="font-size:.93rem;margin-bottom:0"></p>
+            <div class="guide-actions">
+              <button id="challengeCheck" class="action-btn" type="button">בדוק את הפתרון שלי</button>
+              <button id="challengeReset" class="action-btn secondary" type="button">התחל מחדש</button>
+            </div>
+            <div id="challengeFeedback" class="feedback" role="status"></div>
+          </section>
+        </section>
+        <div class="details-row">
+          <section class="card insight" aria-live="polite">
+            <div class="mini-kicker">מה למדנו מהשינוי?</div>
+            <h3 id="insightTitle">לחץ דם וסינון אינם אותו הדבר</h3>
+            <p id="insightText">העורקיקים, הלחץ האונקוטי והלחץ בקופסית באומן פועלים יחד. שנו בקר אחד והסתכלו על קצב הסינון ועל זרימת הפלזמה, לא רק על מספר אחד.</p>
+          </section>
+          <section class="card comparison">
+            <h3 id="comparisonTitle">השוואה למצב ההתחלתי</h3>
+            <div class="cmp-row">
+              <label>GFR</label>
+              <div class="cmp-track"><div id="cmpGfrBase" class="cmp-normal"></div><div id="cmpGfrLive" class="cmp-live"></div></div>
+              <output id="cmpGfrValue">100%</output>
+            </div>
+            <div class="cmp-row">
+              <label>זרימת פלזמה</label>
+              <div class="cmp-track"><div id="cmpFlowBase" class="cmp-normal"></div><div id="cmpFlowLive" class="cmp-live"></div></div>
+              <output id="cmpFlowValue">100%</output>
+            </div>
+            <span class="caption">אפור: מצב התחלתי. כחול: המצב שיצרתם.</span>
+          </section>
+        </div>
+      </div>
+      <aside class="side-column">
+        <section class="card controls">
+          <div class="card-heading controls-header">
+            <h2>שנו את תנאי הסינון</h2>
+            <span class="caption">אפשר לגרור כל בקר</span>
+          </div>
+          <p class="control-section-label">01 / העורקיקים</p>
+          <div class="control-box">
+            <div class="control-row"><label for="aff">קוטר העורקיק הנכנס</label><output class="value" id="affValue">70</output></div>
+            <input id="aff" type="range" min="35" max="95" step="5" value="70" style="--active:#dc4966" aria-label="קוטר העורקיק הנכנס">
+            <div class="hints"><span>מכווץ</span><span>מורחב</span></div>
+            <p class="control-help">מדד קוטר יחסי בסימולציה. 70 הוא מצב הבסיס.</p>
+          </div>
+          <div class="control-box">
+            <div class="control-row"><label for="eff">קוטר העורקיק היוצא</label><output class="value" id="effValue">70</output></div>
+            <input id="eff" type="range" min="30" max="95" step="5" value="70" style="--active:#dc4966" aria-label="קוטר העורקיק היוצא">
+            <div class="hints"><span>מכווץ</span><span>מורחב</span></div>
+            <p class="control-help">מדד קוטר יחסי בסימולציה. 70 הוא מצב הבסיס.</p>
+          </div>
+          <p class="control-section-label">02 / כוחות נוספים</p>
+          <div class="control-box">
+            <div class="control-row"><label for="map">לחץ הדם המזין את הכליה</label><output class="value" id="mapValue">100</output></div>
+            <input id="map" type="range" min="70" max="135" step="5" value="100" style="--active:#218f83">
+            <p class="control-help">לחץ עורקי ממוצע במודל, מ״מ כספית</p>
+          </div>
+          <div class="control-box">
+            <div class="control-row"><label for="onc">לחץ אונקוטי בכניסה לפקעית</label><output class="value" id="oncValue">30</output></div>
+            <input id="onc" type="range" min="20" max="40" step="2" value="30" style="--active:#7955c2">
+            <p class="control-help">כוח המשיכה של חלבוני הפלזמה, מ״מ כספית</p>
+          </div>
+          <div class="control-box">
+            <div class="control-row"><label for="bow">לחץ בחלל קופסית באומן</label><output class="value" id="bowValue">15</output></div>
+            <input id="bow" type="range" min="5" max="30" step="1" value="15" style="--active:#de9a25">
+            <p class="control-help">לחץ המתנגד למעבר נוזל אל הקופסית</p>
+          </div>
+          <div class="control-secondary">
+            <button id="resetButton" type="button">↻ חזור לתקין</button>
+            <button id="saveButton" type="button">◉ שמור להשוואה</button>
+          </div>
+          <div class="preset-title">נסו מצב מוכן:</div>
+          <div class="preset-grid">
+            <button class="preset" data-preset="afferent">כיווץ נכנס</button>
+            <button class="preset" data-preset="efferent">כיווץ יוצא</button>
+            <button class="preset" data-preset="severe">כיווץ יוצא חזק</button>
+            <button class="preset" data-preset="block">חסימת ניקוז</button>
+          </div>
+        </section>
+        <section class="card readout" style="margin-top:14px">
+          <div class="card-heading" style="padding:0 0 11px">
+            <h2>מה קרה לסינון?</h2>
+            <span class="caption"><span class="signal"></span>נתונים מתעדכנים</span>
+          </div>
+          <div class="readout-grid">
+            <div class="measure"><span class="name">קצב סינון</span><output class="number" id="gfrResult">120</output><small>מ״ל/דקה</small><span class="delta neutral" id="gfrDelta">ללא שינוי</span></div>
+            <div class="measure"><span class="name">לחץ בפקעית</span><output class="number" id="pgcResult">57</output><small>מ״מ כספית</small><span class="delta neutral" id="pgcDelta">ללא שינוי</span></div>
+            <div class="measure"><span class="name">זרימת פלזמה</span><output class="number" id="rpfResult">600</output><small>מ״ל/דקה</small><span class="delta neutral" id="rpfDelta">ללא שינוי</span></div>
+          </div>
+          <div id="modelWarning" class="side-warning">⚠️ הגעתם לקצה טווח הניסוי. כאן המודל נועד להמחיש כיוון מגמה, לא לנבא נתון קליני.</div>
+        </section>
+        <section class="card forces" style="margin-top:14px">
+          <h2>מאזן הכוחות</h2>
+          <div class="caption">פסי הצבע ממחישים את גודל הכוחות: ירוק בעד הסינון; סגול וצהוב נגדו.</div>
+          <div class="force-line">
+            <div class="force-top"><span>🟢 לחץ הידרוסטטי בפקעית</span><output id="forcePgc">57</output></div>
+            <div class="force-track"><div id="forcePgcBar" class="force-fill bar-pgc" style="width:57%"></div></div>
+          </div>
+          <div class="force-line">
+            <div class="force-top"><span>🟣 לחץ אונקוטי בכניסה</span><output id="forcePi">30</output></div>
+            <div class="force-track"><div id="forcePiBar" class="force-fill bar-pi" style="width:30%"></div></div>
+          </div>
+          <div class="force-line">
+            <div class="force-top"><span>🟡 לחץ בחלל באומן</span><output id="forceBow">15</output></div>
+            <div class="force-track"><div id="forceBowBar" class="force-fill bar-bow" style="width:15%"></div></div>
+          </div>
+          <div class="equation">
+            <div class="equation-label">לחץ הסינון נטו בכניסה לנימים</div>
+            <strong id="netForce">57 − 30 − 15 = 12</strong>
+            <span class="net-interpretation" id="netInterpretation">בכניסה לנימים: הלחץ נטו מעודד סינון</span>
+          </div>
+        </section>
+      </aside>
+    </main>
+    <p class="science-foot">הסימולטור הוא מודל לימודי מפושט של הפיזיולוגיה הגלומרולרית. הערכים מחושבים באופן עקבי מתוך התנגדות העורקיקים, כוחות הסינון והצטברות חלבוני הפלזמה לאורך הנימים, אך אינם מדידות רפואיות ואינם כוללים את מלוא מנגנוני הוויסות העצמי וההורמונלי. מיועד ללמידה ולא להערכת מטופלים.</p>
+  </div>
+  <script>
+    (function () {
+      "use strict";
+      var $ = function(id){return document.getElementById(id)};
+      var BASE = Object.freeze({aff:70,eff:70,map:100,onc:30,bow:15});
+      var state = Object.assign({},BASE), mode="guided", guideIndex=0, chosen=null, revealed=false, selectedChallenge=0;
+      var speed=1, paused=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var controls=["aff","eff","map","onc","bow"];
+      var KF=16, QBASE=(BASE.map-10)/(1.4+1.5);
+      var presets={
+        normal:{},
+        afferent:{aff:65},
+        efferent:{eff:60},
+        severe:{eff:35},
+        block:{bow:27},
+        lowProtein:{onc:20},
+        lowPressure:{map:75}
+      };
+      function simulate(s){
+        var ra=1.4*Math.pow(70/s.aff,4), re=1.5*Math.pow(70/s.eff,4);
+        var flow=(s.map-10)/(ra+re);
+        var rpf=Math.max(8,600*flow/QBASE);
+        var pgc=10+flow*re;
+        var remaining=rpf,gfr=0,piSum=0,n=48;
+        for(var i=0;i<n;i++){
+          var pi=s.onc*rpf/Math.max(1,remaining);
+          piSum+=pi;
+          var step=KF/n*Math.max(0,pgc-s.bow-pi);
+          step=Math.min(step,Math.max(0,remaining-rpf*.10));
+          gfr+=step;remaining-=step;
+        }
+        return {rpf:rpf,pgc:pgc,gfr:gfr,piMean:piSum/n,piEnd:s.onc*rpf/Math.max(1,remaining),netEntry:pgc-s.bow-s.onc,ff:100*gfr/rpf,extreme:pgc>85||pgc<34||rpf<155||gfr>230||gfr<10};
+      }
+      var base=simulate(BASE), current=simulate(state), saved=base;
+      function fmt(v){return Math.round(v).toLocaleString("he-IL")}
+      function pct(v){return Math.round(v)+"%"}
+      function delta(id,v,ref){
+        var d=ref?100*(v/ref-1):0, el=$(id);
+        el.className="delta "+(Math.abs(d)<2?"neutral":d>0?"up":"down");
+        el.textContent=Math.abs(d)<2?"ללא שינוי":(d>0?"▲ ":"▼ ")+Math.abs(Math.round(d))+"%";
+      }
+      function setControlUI(){
+        controls.forEach(function(name){
+          var el=$(name),val=state[name],min=+el.min,max=+el.max;
+          el.value=String(val);el.style.setProperty("--fill",pct(100*(val-min)/(max-min)));
+          $(name+"Value").textContent=val;
+        });
+        $("afferentInner").setAttribute("stroke-width",(22+state.aff*.3).toFixed(1));
+        $("afferentOuter").setAttribute("stroke-width",(29+state.aff*.3).toFixed(1));
+        $("efferentInner").setAttribute("stroke-width",(22+state.eff*.3).toFixed(1));
+        $("efferentOuter").setAttribute("stroke-width",(29+state.eff*.3).toFixed(1));
+      }
+      function updateReadouts(){
+        current=simulate(state);setControlUI();
+        $("gfrResult").textContent=fmt(current.gfr);$("pgcResult").textContent=fmt(current.pgc);$("rpfResult").textContent=fmt(current.rpf);
+        delta("gfrDelta",current.gfr,base.gfr);delta("pgcDelta",current.pgc,base.pgc);delta("rpfDelta",current.rpf,base.rpf);
+        var bars=[["forcePgc","forcePgcBar",current.pgc],["forcePi","forcePiBar",state.onc],["forceBow","forceBowBar",state.bow]];
+        bars.forEach(function(part){$(part[0]).textContent=fmt(part[2]);$(part[1]).style.width=Math.max(0,Math.min(100,part[2]))+"%"});
+        $("netForce").textContent=fmt(current.pgc)+" − "+fmt(state.onc)+" − "+fmt(state.bow)+" = "+fmt(current.netEntry);
+        $("netInterpretation").textContent=current.netEntry>1?"בכניסה לנימים: לחץ נטו בעד הסינון ("+fmt(current.netEntry)+" מ״מ כספית)":current.netEntry<0?"בכניסה לנימים: הלחץ נטו אינו מעודד סינון":"בכניסה לנימים: כוחות הסינון כמעט מאוזנים";
+        $("netInterpretation").classList.toggle("negative",current.netEntry<=1);
+        $("filtrateStream").setAttribute("stroke-width",String(Math.max(2,Math.min(34,3+current.gfr/7))));
+        $("filtrateStream").setAttribute("opacity",String(Math.max(.12,Math.min(.9,.15+current.gfr/250))));
+        $("modelWarning").classList.toggle("show",current.extreme);
+        var scale=270, baseG=Math.min(100,100*saved.gfr/scale), liveG=Math.min(100,100*current.gfr/scale), baseF=Math.min(100,100*saved.rpf/1200),liveF=Math.min(100,100*current.rpf/1200);
+        $("cmpGfrBase").style.width=baseG+"%";$("cmpGfrLive").style.width=liveG+"%";
+        $("cmpFlowBase").style.width=baseF+"%";$("cmpFlowLive").style.width=liveF+"%";
+        $("cmpGfrValue").textContent=saved.gfr>0.001?pct(current.gfr/saved.gfr*100):"לא ניתן להשוות";
+        $("cmpFlowValue").textContent=pct(current.rpf/saved.rpf*100);
+        updateInsight();
+      }
+      function updateInsight(){
+        var t="הזרימה והלחצים יחד קובעים את התסנין.",p="הלחץ בפקעית מעודד סינון. הלחץ האונקוטי והלחץ בחלל באומן מתנגדים לו. לאורך הנימים, יציאת מים מעלה את ריכוז החלבונים בדם ואת הלחץ האונקוטי.";
+        if(state.eff<=42){
+          t="סגירה קיצונית של היוצא אינה פתרון קסם";
+          p="הלחץ בפקעית עשוי לעלות, אבל זרימת הפלזמה פוחתת מאוד. ככל שמים מסתננים, חלבוני הפלזמה מתרכזים והלחץ האונקוטי גדל. לכן ה־GFR אינו ממשיך לעלות ללא הגבלה.";
+        }else if(state.eff<70 && state.aff>=65){
+          t="כיווץ מתון של העורקיק היוצא";
+          p="ההתנגדות ליציאת הדם מעלה את הלחץ בנימי הפקעית, אף שזרימת הפלזמה קטנה. בטווח מתון קצב הסינון עשוי לעלות.";
+        }else if(state.aff<65){
+          t="פחות דם מגיע אל הפקעית";
+          p="כשהעורקיק הנכנס מתכווץ, זרימת הדם אל הפקעית והלחץ בה נוטים לרדת. לכן הסינון קטן.";
+        }else if(state.aff>75){
+          t="הרחבת העורקיק הנכנס";
+          p="ההתנגדות לכניסת הדם פוחתת, ולכן יותר פלזמה מגיעה לפקעית והלחץ עשוי לעלות. במציאות פועלים גם מנגנוני ויסות עצמי.";
+        }
+        if(state.bow>19){t="הקופסית מפעילה לחץ נגדי";p="כאשר הלחץ בחלל קופסית באומן עולה, הוא מתנגד ליציאת הנוזל מהנימים. זוהי דרך להמחיש כיצד חסימה בניקוז השתן עשויה לפגוע בסינון."}
+        else if(state.onc<27){t="פחות חלבונים, פחות לחץ אונקוטי";p="בניסוי מבוקר שבו שאר המשתנים נשארים קבועים, הפחתת הלחץ האונקוטי מחלישה את אחד הכוחות המתנגדים לסינון."}
+        else if(state.map<90){t="לחץ הזנה נמוך";p="ירידה בלחץ המזין את הכליה עשויה להקטין את זרימת הדם ואת הלחץ בפקעית. הגוף מפעיל מנגנוני פיצוי, שאינם מוצגים במלואם כאן."}
+        $("insightTitle").textContent=t;$("insightText").textContent=p;
+        $("sceneTitle").textContent=current.gfr<base.gfr*.65?"הסינון נחלש":current.gfr>base.gfr*1.2?"הסינון מוגבר":"הסינון נמשך";
+        $("sceneDescription").textContent="קצב סינון במודל: "+fmt(current.gfr)+" מ״ל לדקה. זרימת פלזמה: "+fmt(current.rpf)+" מ״ל לדקה. שימו לב לתנועת התאים האדומים לעומת טיפות התסנין.";
+      }
+      function setState(preset){
+        state=Object.assign({},BASE,preset||{});updateReadouts();
+      }
+      controls.forEach(function(name){
+        $(name).addEventListener("input",function(){state[name]=Number(this.value);updateReadouts()});
+      });
+      document.querySelectorAll(".preset").forEach(function(btn){btn.addEventListener("click",function(){setState(presets[this.dataset.preset])})});
+      $("resetButton").addEventListener("click",function(){setState({})});
+      $("saveButton").addEventListener("click",function(){saved=simulate(state);$("comparisonTitle").textContent="השוואה למצב ששמרתם";updateReadouts();$("saveButton").textContent="✓ מצב שמור להשוואה";setTimeout(function(){$("saveButton").textContent="◉ שמור להשוואה"},1700)});
+      var guided=[
+        {title:"כך נראה סינון תקין",desc:"התבוננו בזרימת הדם בנימי הפקעית ובנוזל העובר לחלל קופסית באומן.",q:"מה ההבדל בין הדם שעוזב את הפקעית לבין התסנין שנכנס לנפרון?",preset:{},ans:null,exp:"תאי הדם ורוב החלבונים נשארים בנימים. חלק מנוזל הפלזמה ומומסים קטנים מסתננים אל חלל קופסית באומן."},
+        {title:"מה קורה כשסוגרים את הכניסה?",desc:"נכווץ את העורקיק הנכנס. נסו לנבא את השינוי ב־GFR לפני הניסוי.",q:"מה יקרה לקצב הסינון?",preset:{aff:65},ans:"יקטן",exp:"ההתנגדות בכניסה גדלה, ולכן זרימת הפלזמה והלחץ בפקעית יורדים. כתוצאה מכך קצב הסינון קטן."},
+        {title:"עכשיו סוגרים מעט את היציאה",desc:"נחזיר את הכניסה לתקין ונכווץ במתינות את העורקיק היוצא.",q:"מה יקרה לקצב הסינון לעומת מצב תקין?",preset:{eff:60},ans:"יגדל",exp:"בטווח מתון ההתנגדות ביציאה מעלה את הלחץ בנימים, וה־GFR עשוי לעלות אף שזרימת הפלזמה קטנה."},
+        {title:"האם כדאי לסגור את היציאה עד הסוף?",desc:"נכווץ מאוד את העורקיק היוצא. שימו לב גם לזרימת הפלזמה, לא רק ללחץ.",q:"מה צפוי לקרות ל־GFR לעומת מצב הכיווץ המתון?",preset:{eff:35},ans:"יקטן",exp:"כיווץ קיצוני מקטין מאוד את זרימת הפלזמה. חלבונים מתרכזים לאורך הנימים, הלחץ האונקוטי עולה, והסינון עשוי לרדת שוב."},
+        {title:"מה יקרה אם יהיו פחות חלבוני פלזמה?",desc:"נחזיר את העורקיקים למצב תקין ונקטין את הלחץ האונקוטי.",q:"מה יקרה לסינון במודל המבוקר?",preset:{onc:20},ans:"יגדל",exp:"פחות לחץ אונקוטי פירושו פחות התנגדות לסינון, כאשר שאר התנאים נשמרים קבועים."},
+        {title:"הפעם הלחץ בא מצד קופסית באומן",desc:"נגדיל את הלחץ בחלל הקופסית, כאילו יש הפרעה בניקוז התסנין.",q:"מה יקרה לסינון?",preset:{bow:27},ans:"יקטן",exp:"הלחץ בחלל הקופסית פועל נגד הלחץ ההידרוסטטי בנימי הפקעית. כשהוא גדל, הסינון קטן."}
+      ];
+      function renderGuide(){
+        var s=guided[guideIndex];chosen=null;revealed=false;setState({});
+        $("guideTitle").textContent="שלב "+(guideIndex+1)+": "+s.title;
+        $("guideCounter").textContent=(guideIndex+1)+" מתוך "+guided.length;
+        $("guideDescription").textContent=s.desc;$("guideQuestion").textContent=s.q;
+        $("guideChoices").innerHTML="";
+        if(s.ans){
+          ["יגדל","יקטן","יישאר דומה"].forEach(function(answer){
+            var btn=document.createElement("button");btn.className="choice";btn.type="button";btn.textContent=answer;
+            btn.addEventListener("click",function(){chosen=answer;document.querySelectorAll("#guideChoices .choice").forEach(function(b){b.classList.toggle("chosen",b===btn)})});
+            $("guideChoices").appendChild(btn);
+          });
+        }
+        $("guideFeedback").className="feedback";$("guideFeedback").textContent="";
+        $("guidePrev").disabled=guideIndex===0;$("guideNext").disabled=guideIndex===guided.length-1;
+        $("guideRun").textContent="הפעל את הניסוי";
+      }
+      $("guideRun").addEventListener("click",function(){
+        var s=guided[guideIndex];setState(s.preset);revealed=true;
+        var fb=$("guideFeedback"),correct=!s.ans||chosen===s.ans;
+        fb.className="feedback show"+(!correct&&chosen?" error":"");
+        fb.textContent=(s.ans?(chosen?(correct?"ניבאתם נכון. ":"ניבאתם אחרת, וזה בדיוק הזמן לבדוק. "):"לא בחרתם תחזית. "):"")+"תוצאה: "+s.exp;
+        document.querySelectorAll("#guideChoices .choice").forEach(function(btn){btn.classList.remove("chosen");btn.classList.toggle("correct",btn.textContent===s.ans);btn.classList.toggle("wrong",chosen===btn.textContent&&!correct)});
+        $("guideRun").textContent="↻ הרץ שוב";
+      });
+      $("guideNext").addEventListener("click",function(){if(guideIndex<guided.length-1){guideIndex++;renderGuide()}});
+      $("guidePrev").addEventListener("click",function(){if(guideIndex>0){guideIndex--;renderGuide()}});
+      var challenges=[
+        {code:"01",name:"סגרו את הכניסה",story:"מנגנון מקטין את קוטר העורקיק הנכנס לפקעית.",goal:"גרמו ל־GFR לרדת לפחות ב־35% באמצעות שינוי העורקיק הנכנס בלבד.",check:function(s,m){return s.aff<=65&&s.eff===70&&s.map===100&&s.onc===30&&s.bow===15&&m.gfr<base.gfr*.65},why:"הגבלת הכניסה מורידה את זרימת הפלזמה ואת הלחץ בפקעית."},
+        {code:"02",name:"לחץ גבוה, פחות זרימה",story:"התנגדות היציאה מן הפקעית גדלה באופן מתון.",goal:"העלו את ה־GFR ביחס לתקין, אבל הקטינו את זרימת הפלזמה, באמצעות העורקיק היוצא בלבד.",check:function(s,m){return s.aff===70&&s.eff<70&&s.eff>=55&&s.map===100&&s.onc===30&&s.bow===15&&m.gfr>base.gfr&&m.rpf<base.rpf},why:"כיווץ מתון ביציאה יכול להגדיל את הלחץ בפקעית תוך הקטנת הזרימה."},
+        {code:"03",name:"חסימה בניקוז",story:"מטופל מגיע עם הפרעה בניקוז השתן. אתם רוצים לדמות לחץ מוגבר בקופסית.",goal:"הקטינו את ה־GFR באמצעות העלאת הלחץ בקופסית באומן בלבד.",check:function(s,m){return s.aff===70&&s.eff===70&&s.map===100&&s.onc===30&&s.bow>=22&&m.gfr<base.gfr*.8},why:"הלחץ בחלל באומן מתנגד לסינון מן הנימים."},
+        {code:"04",name:"הכוח האונקוטי",story:"מדובר בניסוי מחשבתי שבו רמת חלבוני הפלזמה נמוכה יותר, וכל השאר נשאר קבוע.",goal:"הגדילו את ה־GFR באמצעות הורדת הלחץ האונקוטי בלבד.",check:function(s,m){return s.aff===70&&s.eff===70&&s.map===100&&s.bow===15&&s.onc<=26&&m.gfr>base.gfr*1.1},why:"הלחץ האונקוטי הוא כוח שמתנגד לסינון; הפחתתו עשויה להגדיל את הסינון במודל."}
+      ];
+      function renderChallenge(){
+        var c=challenges[selectedChallenge];
+        $("challengeList").innerHTML="";
+        challenges.forEach(function(item,i){
+          var b=document.createElement("button");b.className="challenge-item"+(selectedChallenge===i?" selected":"");b.type="button";
+          b.textContent="אתגר "+item.code+" · "+item.name;b.addEventListener("click",function(){selectedChallenge=i;setState({});renderChallenge()});
+          $("challengeList").appendChild(b);
+        });
+        $("challengeStory").textContent="מקרה "+c.code+": "+c.story;
+        $("challengeGoal").textContent="המשימה: "+c.goal;
+        $("challengeFeedback").className="feedback";$("challengeFeedback").textContent="";
+      }
+      $("challengeCheck").addEventListener("click",function(){
+        var c=challenges[selectedChallenge],ok=c.check(state,current),fb=$("challengeFeedback");
+        fb.className="feedback show"+(ok?"":" error");
+        fb.textContent=ok?"✓ מצוין, עמדתם במשימה. "+c.why:"עדיין לא. בדקו שאתם משנים רק את הגורם שהתבקשתם לשנות, ושקצב הסינון אכן השתנה בכיוון המבוקש.";
+      });
+      $("challengeReset").addEventListener("click",function(){setState({});renderChallenge()});
+      var modeExplanations={guided:"מנבאים את התוצאה ורק אחר כך מבצעים ניסוי.",lab:"שחקו עם התנאים, השוו למצב התקין ובדקו את ההסבר.",challenge:"המורה מציג קוד משימה, והתלמידים מנסים להשיג את היעד."};
+      document.querySelectorAll(".mode-tab").forEach(function(b){
+        b.addEventListener("click",function(){
+          mode=b.dataset.mode;document.querySelectorAll(".mode-tab").forEach(function(x){x.setAttribute("aria-selected",x===b?"true":"false")});
+          $("guidedPanel").hidden=mode!=="guided";$("challengePanel").hidden=mode!=="challenge";$("modeExplainer").textContent=modeExplanations[mode];
+          if(mode==="guided")renderGuide();else if(mode==="challenge"){setState({});renderChallenge();}
+        });
+      });
+      var rbcPath=$("rbcMotionPath"),waterPath=$("blueMotionPath");
+      var bloodLength=rbcPath.getTotalLength(),waterLength=waterPath.getTotalLength();
+      var bloodDots=[],waterDots=[],proteinDots=[];
+      function addSvg(parent,tag,attrs){
+        var node=document.createElementNS("http://www.w3.org/2000/svg",tag);
+        Object.keys(attrs).forEach(function(k){node.setAttribute(k,attrs[k])});parent.appendChild(node);return node;
+      }
+      for(var i=0;i<18;i++){
+        bloodDots.push(addSvg($("bloodCells"),"ellipse",{rx:"10",ry:"5.8",fill:"#b92245",stroke:"#ff9faf","stroke-width":"2.2",opacity:".98"}));
+      }
+      for(var j=0;j<8;j++){
+        proteinDots.push(addSvg($("proteinParticles"),"circle",{r:"3.7",fill:"#7d4eb6",stroke:"#e7d9ff","stroke-width":"1.1",opacity:".92"}));
+      }
+      for(var k=0;k<18;k++){
+        waterDots.push(addSvg($("waterParticles"),"circle",{r:"4.5",fill:"#20b4e3",stroke:"#eafcff","stroke-width":"1.4",opacity:".85"}));
+      }
+      var last=0,tick=0;
+      function animate(timestamp){
+        if(!last)last=timestamp;
+        var dt=Math.min(.06,(timestamp-last)/1000);last=timestamp;if(!paused)tick+=dt*speed;
+        var flowMultiplier=Math.max(.18,Math.min(2.1,current.rpf/base.rpf));
+        bloodDots.forEach(function(dot,i){
+          var part=(tick*.075*flowMultiplier+i/bloodDots.length)%1;
+          var p=rbcPath.getPointAtLength(part*bloodLength),next=rbcPath.getPointAtLength(Math.min(bloodLength,part*bloodLength+3));
+          var angle=Math.atan2(next.y-p.y,next.x-p.x)*180/Math.PI;
+          dot.setAttribute("transform","translate("+p.x.toFixed(1)+" "+p.y.toFixed(1)+") rotate("+angle.toFixed(1)+")");
+          dot.setAttribute("opacity",current.rpf<100?".67":".96");
+        });
+        proteinDots.forEach(function(dot,i){
+          var part=(tick*.07*flowMultiplier+i/proteinDots.length+.037)%1,p=rbcPath.getPointAtLength(part*bloodLength);
+          dot.setAttribute("cx",p.x.toFixed(1));dot.setAttribute("cy",p.y.toFixed(1));
+        });
+        var strength=Math.max(0,Math.min(1,current.gfr/Math.max(1,base.gfr*1.45)));
+        waterDots.forEach(function(dot,i){
+          var part=(tick*.13*(.25+strength)+i/waterDots.length)%1,p=waterPath.getPointAtLength(part*waterLength);
+          dot.setAttribute("cx",p.x.toFixed(1));dot.setAttribute("cy",p.y.toFixed(1));
+          dot.setAttribute("opacity",(strength>.025&&i<Math.ceil(18*strength)?String(.3+.65*strength):"0"));
+        });
+        requestAnimationFrame(animate);
+      }
+      $("pauseButton").addEventListener("click",function(){
+        paused=!paused;this.textContent=paused?"▶ המשך תנועה":"❚❚ עצור תנועה";this.setAttribute("aria-pressed",paused?"true":"false");
+      });
+      $("zoomButton").addEventListener("click",function(){
+        var active=document.querySelector(".stage").classList.toggle("zoomed");
+        this.textContent=active?"⊖ הצג את כל האיור":"⊕ הגדל איור";
+        this.setAttribute("aria-pressed",active?"true":"false");
+      });
+      $("speedButton").addEventListener("click",function(){
+        speed=speed===1? .5:speed===.5?2:1;this.textContent="מהירות ×"+speed;
+      });
+      $("pauseButton").textContent=paused?"▶ המשך תנועה":"❚❚ עצור תנועה";
+      updateReadouts();renderGuide();requestAnimationFrame(animate);
+    })();
+  </script>
+</body>
+</html>
